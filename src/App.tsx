@@ -3,6 +3,8 @@ import { generateClient } from "aws-amplify/data";
 import type { Schema } from "../amplify/data/resource";
 
 const client = generateClient<Schema>();
+console.log("Amplify client initialized:", client);
+
 
 function App() {
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
@@ -23,7 +25,6 @@ function App() {
       reader.onload = (event) => {
         setCapturedImage(event.target?.result as string);
         console.log("Photo captured!");
-        // You can now use the image data to upload or process
       };
       reader.readAsDataURL(file);
     }

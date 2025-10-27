@@ -1,38 +1,76 @@
 import { useEffect, useState } from "react";
-import type { Schema } from "../amplify/data/resource";
 import { generateClient } from "aws-amplify/data";
+import type { Schema } from "../amplify/data/resource";
 
 const client = generateClient<Schema>();
 
 function App() {
-  const [todos, setTodos] = useState<Array<Schema["Todo"]["type"]>>([]);
+  const [capturedImage, setCapturedImage] = useState<string | null>(null);
 
   useEffect(() => {
-    client.models.Todo.observeQuery().subscribe({
-      next: (data) => setTodos([...data.items]),
-    });
+    // You can initialize any setup logic here later if needed
   }, []);
 
-  function createTodo() {
-    client.models.Todo.create({ content: window.prompt("Todo content") });
-  }
+  const openCamera = () => {
+    // Trigger the file input click
+    document.getElementById('camera-input')?.click();
+  };
+
+  const handleImageCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setCapturedImage(event.target?.result as string);
+        console.log("Photo captured!");
+        // You can now use the image data to upload or process
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const retakePhoto = () => {
+    setCapturedImage(null);
+    // Reset the input so the same file can be selected again
+    const input = document.getElementById('camera-input') as HTMLInputElement;
+    if (input) input.value = '';
+  };
 
   return (
-    <main>
-      <h1>My todos</h1>
-      <button onClick={createTodo}>+ new</button>
-      <ul>
-        {todos.map((todo) => (
-          <li key={todo.id}>{todo.content}</li>
-        ))}
-      </ul>
-      <div>
-        🥳 App successfully hosted. Try creating a new todo.
-        <br />
-        <a href="https://docs.amplify.aws/react/start/quickstart/#make-frontend-updates">
-          Review next step of this tutorial.
-        </a>
-      </div>
+    <main style={{ padding: "20px", fontFamily: "Arial, sans-serif" }}>
+      <h1>Welcome to Idara!</h1>
+      
+      {/* Hidden file input that opens native camera */}
+      <input
+        id="camera-input"
+        type="file"
+        accept="image/*"
+        capture="user"  // "user" for front camera, "environment" for back camera
+        onChange={handleImageCapture}
+        style={{ display: "none" }}
+      />
+
+      {!capturedImage && (
+        <button onClick={openCamera} style={{ padding: "10px 20px", fontSize: "16px" }}>
+          + new
+        </button>
+      )}
+
+      {capturedImage && (
+        <div>
+          <h2>Captured Photo:</h2>
+          <img 
+            src={capturedImage} 
+            alt="Captured" 
+            style={{ width: "100%", maxWidth: "500px", border: "2px solid #333" }}
+          />
+          <div style={{ marginTop: "10px" }}>
+            <button onClick={retakePhoto} style={{ padding: "10px 20px", fontSize: "16px" }}>
+              Retake
+            </button>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

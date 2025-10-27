@@ -5,7 +5,6 @@ import type { Schema } from "../amplify/data/resource";
 const client = generateClient<Schema>();
 console.log("Amplify client initialized:", client);
 
-
 function App() {
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
 
@@ -37,6 +36,72 @@ function App() {
     if (input) input.value = '';
   };
 
+  const cropUpperThird = (imageData: string): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          reject('Canvas context not available');
+          return;
+        }
+
+        // Set canvas size to upper third of image
+        const cropHeight = Math.floor(img.height / 3);
+        canvas.width = img.width;
+        canvas.height = cropHeight;
+
+        // Draw the upper third
+        ctx.drawImage(img, 0, 0, img.width, cropHeight, 0, 0, img.width, cropHeight);
+
+        // Convert to base64
+        resolve(canvas.toDataURL('image/jpeg').split(',')[1]);
+      };
+      img.onerror = reject;
+      img.src = imageData;
+    });
+  };
+
+  const sendToAPI = async () => {
+    if (!capturedImage) return;
+
+    try {
+      console.log("Processing images...");
+      
+      // Get original base64 (remove data:image/jpeg;base64, prefix)
+      const originalBase64 = capturedImage.split(',')[1];
+      
+      // Create cropped version
+      const croppedBase64 = await cropUpperThird(capturedImage);
+
+      console.log("Sending to API...");
+      
+      const response = await fetch('https://eby9ngcjr6.execute-api.eu-west-1.amazonaws.com/dev/save-user-input-to-s3', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          image_base64_cropped: croppedBase64,
+          image_base64: originalBase64
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log("Success!", result);
+        alert("Images uploaded successfully!");
+      } else {
+        console.error("API error:", response.status);
+        alert(`Upload failed: ${response.status}`);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert("Error uploading images");
+    }
+  };
+
   return (
     <main style={{ padding: "20px", fontFamily: "Arial, sans-serif" }}>
       <h1>Welcome to Idara!</h1>
@@ -46,7 +111,7 @@ function App() {
         id="camera-input"
         type="file"
         accept="image/*"
-        capture="user"  // "user" for front camera, "environment" for back camera
+        capture="user"
         onChange={handleImageCapture}
         style={{ display: "none" }}
       />
@@ -66,8 +131,11 @@ function App() {
             style={{ width: "100%", maxWidth: "500px", border: "2px solid #333" }}
           />
           <div style={{ marginTop: "10px" }}>
-            <button onClick={retakePhoto} style={{ padding: "10px 20px", fontSize: "16px" }}>
+            <button onClick={retakePhoto} style={{ padding: "10px 20px", fontSize: "16px", marginRight: "10px" }}>
               Retake
+            </button>
+            <button onClick={sendToAPI} style={{ padding: "10px 20px", fontSize: "16px", backgroundColor: "#4CAF50", color: "white", border: "none", cursor: "pointer" }}>
+              Upload
             </button>
           </div>
         </div>

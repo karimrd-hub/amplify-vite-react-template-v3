@@ -64,16 +64,21 @@ function App() {
   };
 
   const sendToAPI = async () => {
-    if (!capturedImage) return;
+    if (!capturedImage) {
+      console.error("No image captured to send.");
+      return;
+    }
 
     try {
       console.log("Processing images...");
       
       // Get original base64 (remove data:image/jpeg;base64, prefix)
       const originalBase64 = capturedImage.split(',')[1];
+      console.log("Original base64 length:", originalBase64.length);
       
       // Create cropped version
       const croppedBase64 = await cropUpperThird(capturedImage);
+      console.log("Cropped base64 length:", croppedBase64.length);
 
       console.log("Sending to API...");
       
@@ -88,16 +93,16 @@ function App() {
         })
       });
 
+      console.log("API response status:", response.status);
       if (response.ok) {
         const result = await response.json();
         console.log("Success!", result);
-        alert("Images uploaded successfully!");
       } else {
-        console.error("API error:", response.status);
-        alert(`Upload failed: ${response.status}`);
+        const errorText = await response.text();
+        console.error("API error:", response.status, errorText);
       }
     } catch (error) {
-      console.error("Error:", error);
+      console.error("Error during API call:", error);
       alert("Error uploading images");
     }
   };

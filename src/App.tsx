@@ -4,7 +4,7 @@ import { generateClient } from "aws-amplify/data";
 import type { Schema } from "../amplify/data/resource";
 import { compressImage, cropUpperThird, dataUrlToBase64, calculatePayloadSize } from "./services/imageService";
 import { uploadImages, parseUploadResponse } from "./services/apiService";
-import { startStepFunction, getExecutionResult } from "./services/stepFunctionService";
+import { startStepFunction } from "./services/stepFunctionService";
 
 const client = generateClient<Schema>();
 console.log("Amplify client initialized:", client);

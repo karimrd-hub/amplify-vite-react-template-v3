@@ -1,7 +1,7 @@
 // src/services/stepFunctionService.ts
 
 const STEP_FUNCTION_API_ENDPOINT = 'https://eby9ngcjr6.execute-api.eu-west-1.amazonaws.com/dev/trigger-step-function-textual-info-ocr';
-const STATE_MACHINE_ARN = 'arn:aws:states:eu-west-1:123456789:stateMachine:Idara-ocr-component';
+const STATE_MACHINE_ARN = 'arn:aws:states:eu-west-1:363941815773:stateMachine:Idara-ocr-component';
 
 export interface StepFunctionInput {
   bucket: string;

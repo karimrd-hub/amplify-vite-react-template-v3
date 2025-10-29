@@ -1,3 +1,5 @@
+// src/services/apiService.ts
+
 const API_ENDPOINT = 'https://eby9ngcjr6.execute-api.eu-west-1.amazonaws.com/dev/save-user-input-to-s3';
 
 export interface UploadImagePayload {
@@ -5,10 +7,30 @@ export interface UploadImagePayload {
   image_base64: string;
 }
 
+export interface DocumentData {
+  document_type: {
+    "Document Type": string;
+  };
+  document_side: {
+    "Side": string;
+  };
+  s3_key: string;
+  timing: {
+    total_time_sec: number;
+    gemini_time_type_sec: number;
+    gemini_time_side_sec: number;
+  };
+}
+
 export interface UploadImageResponse {
+  statusCode: number;
+  headers: Record<string, string>;
+  body: string;
+}
+
+export interface ParsedUploadResponse {
   success: boolean;
-  message?: string;
-  [key: string]: any;
+  data: DocumentData;
 }
 
 /**
@@ -36,4 +58,11 @@ export const uploadImages = async (
     console.error('API Error:', error);
     throw error;
   }
+};
+
+/**
+ * Parse the response body
+ */
+export const parseUploadResponse = (response: UploadImageResponse): ParsedUploadResponse => {
+  return JSON.parse(response.body);
 };
